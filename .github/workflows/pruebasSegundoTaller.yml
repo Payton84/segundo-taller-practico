@@ -16,7 +16,7 @@ jobs:
   call-api:
     runs-on: ubuntu-latest
     outputs:
-      events: ${{ steps.get-events.outputs.events }}
+      events: ${{ steps.parse.outputs.events }}
     steps:
       - name: Cache JSON file
         id: cache-json
@@ -33,10 +33,8 @@ jobs:
         run: |
           echo "Consultando API de Wikimedia..."
           curl --location --request GET "https://api.wikimedia.org/feed/v1/wikipedia/es/onthisday/all/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}" > response.json
-          echo "respuesta del API" > $response.json
-          # Export JSON to output
-          EVENTS=$(jq -c '.selected' "response.json")
-          echo "events=$EVENTS" >> $GITHUB_OUTPUT
+          echo "respuesta del API:"
+          cat response.json | jq .
 
       - name: Check Cache Status
         id: check-cache
@@ -46,34 +44,48 @@ jobs:
           else
             echo "No se utilizó caché en esta ejecución."
           fi
+      - name: Parsear eventos y generar array JSON
+        id: parse
+        run: |
+          urls=$(jq -r '.selected[].pages[0].content_urls.desktop.page' response.json | jq -R -s -c 'split("\n")[:-1]')
+          if [ "$urls" = "[]" ]; then
+            echo "No se encontraron eventos."
+            echo "has_events=false" >> $GITHUB_OUTPUT
+          else
+            echo "Eventos encontrados: $urls"
+            echo "events=$urls" >> $GITHUB_OUTPUT
+            echo "has_events=true" >> $GITHUB_OUTPUT
+          fi
 
   generate-pdfs:
     needs: call-api
+    if: needs.call-api.outputs.has-events == 'true'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         event: ${{ fromJson(needs.call-api.outputs.events) }}
+    continue-on-error: true 
     steps:
-      - name: Get Title and URL
-        id: info
+      - name: Preparar nombre de artefacto
+        id: name
         run: |
-          TITLE=$(echo '${{ matrix.event }}' | jq -r '.pages[0].title' | tr ' ' '_')
-          URL=$(echo '${{ matrix.event }}' | jq -r '.pages[0].content_urls.desktop.page')
-          echo "title=$TITLE" >> $GITHUB_OUTPUT
-          echo "url=$URL" >> $GITHUB_OUTPUT
+          title=$(basename "${{ matrix.url }}")
+          safe_title=$(echo "$title" | sed 's/[^a-zA-Z0-9_-]/_/g')
+          echo "filename=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-$safe_title.pdf" >> $GITHUB_ENV
 
-      - name: html to pdf
-        uses: fifsky/html-to-pdf-action@master
+      - name: Convertir URL a PDF
+        uses: fifsky/html-to-pdf-action@v0.1
         with:
-          htmlFile: ${{ steps.info.outputs.url }}
-          outputFile: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ steps.info.outputs.title }}.pdf
-          pdfOptions: '{"format": "A4", "margin": {"top": "10mm", "left": "10mm", "right": "10mm", "bottom": "10mm"}  }}'
+          html: ${{ matrix.url }}
+          output: ${{ env.filename }}
 
       - name: Upload PDF Artifact
         id: upload-artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ steps.info.outputs.title }}
-          path: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ steps.info.outputs.title }}.pdf
+          name: ${{ env.filename }}
+          path: ${{ env.filename }}.pdf
+          retention-days: 1
       
       
