@@ -22,7 +22,8 @@ jobs:
         run: |
           echo "Consultando API de Wikimedia..."
           curl --location --request GET "https://api.wikimedia.org/feed/v1/wikipedia/es/onthisday/all/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}" > response.json
-      
+          echo "respuesta del API" > $response.json
+          
       - name: Cache JSON file
         id: cache-json
         uses: actions/cache@v4
