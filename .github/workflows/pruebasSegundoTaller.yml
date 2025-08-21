@@ -45,6 +45,7 @@ jobs:
           else
             echo "No se utilizó caché en esta ejecución."
           fi
+
       - name: Parsear eventos y generar array JSON
         id: parse
         run: |
@@ -72,13 +73,13 @@ jobs:
     continue-on-error: true 
     steps:
       - name: Preparar nombre de artefacto
-        id: name
+        id: name-artefact
         run: |
           title=$(basename "${{ matrix.url }}")
           safe_title=$(echo "$title" | sed 's/[^a-zA-Z0-9_-]/_/g')
           echo "filename=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-$safe_title.pdf" >> $GITHUB_ENV
 
-      - name: Convertir HTML a PDF
+      - name: Convert from HTML to PDF
         id: convert-to-pdf
         uses: frnode/html-to-pdf-action@master
         with:
