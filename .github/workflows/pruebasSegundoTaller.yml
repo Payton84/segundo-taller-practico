@@ -46,7 +46,7 @@ jobs:
           EVENTS=$(jq -c '.selected' "response.json")
           echo "events=$EVENTS" >> $GITHUB_OUTPUT
 
-generate-pdfs:
+  generate-pdfs:
     needs: call-api
     runs-on: ubuntu-latest
     strategy:
