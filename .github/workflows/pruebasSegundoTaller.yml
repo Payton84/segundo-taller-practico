@@ -66,12 +66,13 @@ jobs:
           safe_title=$(echo "$title" | sed 's/[^a-zA-Z0-9_-]/_/g')
           echo "filename=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-$safe_title.pdf" >> $GITHUB_ENV
 
-      - name: Convertir URL a PDF
+      - name: Convertir HTML a PDF
         id: convert-to-pdf
-        uses: fifsky/html-to-pdf-action@master
+        uses: frnode/html-to-pdf-action@master
         with:
-          html: ${{ matrix.url }}
-          output: ${{ env.filename }}
+          htmlFile: ${{ matrix.url }}
+          outputFile: ${{ env.filename }}
+          pdfOptions: '{"format": "A4", "margin": {"top": "10mm", "left": "10mm", "right": "10mm", "bottom": "10mm"}}'
 
       - name: Upload PDF Artifact
         id: upload-artifact
