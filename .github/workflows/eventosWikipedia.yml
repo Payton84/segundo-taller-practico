@@ -87,7 +87,7 @@ jobs:
         id: upload-artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.filename }}
+          name: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.title }}
           path: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.title }}.pdf
           retention-days: 1
       
