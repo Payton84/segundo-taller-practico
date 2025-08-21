@@ -33,7 +33,7 @@ jobs:
         id: get-events
         run: |
           echo "Consultando API de Wikimedia..."
-          curl --location --request GET "https://api.wikimedia.org/feed/v1/wikipedia/es/onthisday/all/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}" > response.json
+          curl --location --request GET "https://api.wikimedia.org/feed/v1/wikipedia/${{ vars.LANG }}/onthisday/all/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}" > response.json
           echo "respuesta del API:"
           cat response.json | jq .
 
@@ -70,14 +70,14 @@ jobs:
         event: ${{ fromJson(needs.call-api.outputs.events) }}
     continue-on-error: true 
     steps:
-      - name: Preparar nombre de artefacto
-        id: name-artefact
+      - name: Artefact Title
+        id: artefact-name
         run: |
           title=$(basename "${{ matrix.event }}")
           safe_title=$(echo "$title" | sed 's|https://es.wikipedia.org/wiki/||')
           echo "filename=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-$safe_title" >> $GITHUB_ENV
 
-      - name: Convertir HTML a PDF
+      - name: File HTML-PDF
         id: convert-html-to-pdf
         uses: fifsky/html-to-pdf-action@master
         with:
