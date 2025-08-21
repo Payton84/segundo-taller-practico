@@ -76,10 +76,8 @@ jobs:
         id: name-artefact
         run: |
           title=$(basename "${{ matrix.url }}")
-          echo "URL de la matriz: ${{ matrix.url }}" | jq -r '.title' > title.txt
           safe_title=$(echo "$title" | sed 's/[^a-zA-Z0-9_-]/_/g')
           echo "filename=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-$safe_title.pdf" >> $GITHUB_ENV
-          echo "Nombre del archivo: ${{ env.filename }}" > filename.txt
 
       - name: Convertir HTML a PDF
         id: convert-html-to-pdf
