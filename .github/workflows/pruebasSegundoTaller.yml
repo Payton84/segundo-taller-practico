@@ -16,6 +16,12 @@ jobs:
   call-api:
     runs-on: ubuntu-latest
     steps:
+      - name: Llamar API OnThisDay
+        id: call_api
+        run: |
+          echo "Consultando API de Wikimedia..."
+          curl --location --request GET "https://api.wikimedia.org/feed/v1/wikipedia/es/onthisday/all/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}" > response.json
+      
       - name: create hash
         id: json_hash
         run: |
@@ -30,10 +36,5 @@ jobs:
           path: response.json
           key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.json_hash.outputs.hash }}
 
-      - name: Llamar API OnThisDay
-        id: call_api
-        run: |
-          echo "Consultando API de Wikimedia..."
-          curl --location --request GET "https://api.wikimedia.org/feed/v1/wikipedia/es/onthisday/all/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}" > response.json
       
       
