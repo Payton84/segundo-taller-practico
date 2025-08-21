@@ -16,34 +16,30 @@ jobs:
   call-api:
     runs-on: ubuntu-latest
     steps:
-
-      - name: Restaurar cache
-        id: cache
-        uses: actions/cache@v3
-        with:
-          path: response.json
-          key: ${{ env.CACHE_KEY }}
-
       - name: Llamar API OnThisDay
+        if: steps.cache-json.outputs.cache-hit != 'true'
         id: call_api
         run: |
           echo "Consultando API de Wikimedia..."
           curl --location --request GET "https://api.wikimedia.org/feed/v1/wikipedia/es/onthisday/all/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}" > response.json
       
-      - name: Guardar cache
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache@v3
+      - name: Cache JSON file
+        id: cache-json
+        uses: actions/cache@v4
         with:
           path: response.json
-          key: ${{ env.CACHE_KEY }}
+          key: ${{ runner.os }}-json-${{ hashFiles('response.json') }}
+          restore-keys: |
+            ${{ runner.os }}-json-
 
-      - name: Parsear eventos
-        id: parse
+      - name: Check Cache Status
         run: |
-          urls=$(jq -r '.selected[].pages[0].content_urls.desktop.page' response.json)
-          echo "events<<EOF" >> $GITHUB_OUTPUT
-          echo "$urls" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          if [ "${{ steps.cache-json.outputs.cache-hit }}" == "true" ]; then
+            echo "Se utilizó caché en esta ejecución."
+          else
+            echo "No se utilizó caché en esta ejecución."
+          fi
+
 
       
       
