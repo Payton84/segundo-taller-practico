@@ -16,12 +16,7 @@ jobs:
   call-api:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Llamar API On This Day
+      - name: Llamar API OnThisDay
         run: |
-          echo "Ejecutando consulta al API..."
-          RESPONSE=$(curl --location --request GET "https://api.wikimedia.org/feed/v1/wikipedia/lang=${{ vars.LANG }}/onthisday/all/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}")
-          echo "Respuesta del API:"
-          echo "$RESPONSE" | jq .
+          echo "Consultando API de Wikimedia..."
+          curl --location --request GET "https://api.wikimedia.org/feed/v1/wikipedia/es/onthisday/all/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}" -s | jq .
