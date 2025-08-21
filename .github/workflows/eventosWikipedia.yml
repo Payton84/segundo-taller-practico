@@ -84,7 +84,7 @@ jobs:
         uses: fifsky/html-to-pdf-action@master
         with:
           htmlFile: ${{ matrix.event }}
-          outputFile: ${{ env.filename }}
+          outputFile: ${{ env.filename }}.pdf
 
       - name: Upload PDF Artifact
         id: upload-artifact
