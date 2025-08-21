@@ -18,7 +18,6 @@ jobs:
     outputs:
       events: ${{ steps.parse.outputs.events }}
       has-events: ${{ steps.parse.outputs.has_events }}
-      titles: ${{ steps.parse.outputs.titles }}
     steps:
       - name: Cache JSON file
         id: cache-json
@@ -51,18 +50,14 @@ jobs:
         id: parse
         run: |
           urls=$(jq -r '.selected[].pages[0].content_urls.desktop.page' response.json | jq -R -s -c 'split("\n")[:-1]')
-          title=$(jq -r '.selected[].pages[0].title' response.json | jq -R -s -c 'split("\n")[:-1]')
           if [ "$urls" = "[]" ]; then
             echo "No se encontraron eventos."
             echo "has_events=false" >> $GITHUB_OUTPUT
           else
             echo "events=$urls" >> $GITHUB_OUTPUT
-            echo "titles=$title" >> $GITHUB_OUTPUT
             echo "has_events=true" >> $GITHUB_OUTPUT
             echo "URLs obtenidas del API:"
             echo "$urls" | jq -r '.[]'
-            echo "Títulos obtenidos del API:"
-            echo "$title" | jq -r '.[]'
           fi
 
   generate-pdfs:
@@ -73,22 +68,28 @@ jobs:
       fail-fast: false
       matrix:
         event: ${{ fromJson(needs.call-api.outputs.events) }}
-        title: ${{ fromJson(needs.call-api.outputs.titles) }}
     continue-on-error: true 
     steps:
+      - name: Preparar nombre de artefacto
+        id: name-artefact
+        run: |
+          title=$(basename "${{ matrix.event }}")
+          safe_title=$(echo "$title" | sed 's|https://es.wikipedia.org/wiki/||')
+          echo "filename=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-$safe_title" >> $GITHUB_ENV
+
       - name: Convertir HTML a PDF
         id: convert-html-to-pdf
         uses: fifsky/html-to-pdf-action@master
         with:
           htmlFile: ${{ matrix.event }}
-          outputFile: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.title }}.pdf
+          outputFile: ${{ env.filename }}.pdf
 
       - name: Upload PDF Artifact
         id: upload-artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.title }}
-          path: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ matrix.title }}.pdf
+          name: ${{ env.filename }}
+          path: ${{ env.filename }}.pdf
           retention-days: 1
       
       
