@@ -16,14 +16,6 @@ jobs:
   call-api:
     runs-on: ubuntu-latest
     steps:
-      - name: Llamar API OnThisDay
-        if: steps.cache-json.outputs.cache-hit != 'true'
-        id: call_api
-        run: |
-          echo "Consultando API de Wikimedia..."
-          curl --location --request GET "https://api.wikimedia.org/feed/v1/wikipedia/es/onthisday/all/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}" > response.json
-          echo "respuesta del API" > $response.json
-          
       - name: Cache JSON file
         id: cache-json
         uses: actions/cache@v4
@@ -32,6 +24,14 @@ jobs:
           key: ${{ runner.os }}-json-${{ hashFiles('response.json') }}
           restore-keys: |
             ${{ runner.os }}-json-
+            
+      - name: Llamar API OnThisDay
+        if: steps.cache-json.outputs.cache-hit != 'true'
+        id: call_api
+        run: |
+          echo "Consultando API de Wikimedia..."
+          curl --location --request GET "https://api.wikimedia.org/feed/v1/wikipedia/es/onthisday/all/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}" > response.json
+          echo "respuesta del API" > $response.json
 
       - name: Check Cache Status
         run: |
