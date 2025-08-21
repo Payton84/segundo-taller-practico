@@ -44,7 +44,6 @@ jobs:
           else
             echo "No se utilizó caché en esta ejecución."
           fi
-          
       - name: Parsear eventos y generar array JSON
         id: parse
         run: |
@@ -68,7 +67,8 @@ jobs:
           echo "filename=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-$safe_title.pdf" >> $GITHUB_ENV
 
       - name: Convertir URL a PDF
-        uses: fifsky/html-to-pdf-action@v0.1
+        id: convert-to-pdf
+        uses: fifsky/html-to-pdf-action@master
         with:
           html: ${{ matrix.url }}
           output: ${{ env.filename }}
