@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       events: ${{ steps.parse.outputs.events }}
+      has-events: ${{ steps.parse.outputs.has_events }}
     steps:
       - name: Cache JSON file
         id: cache-json
@@ -48,10 +49,21 @@ jobs:
         id: parse
         run: |
           urls=$(jq -r '.selected[].pages[0].content_urls.desktop.page' response.json | jq -R -s -c 'split("\n")[:-1]')
-          echo "events=$urls" >> $GITHUB_OUTPUT
+          if [ "$urls" = "[]" ]; then
+            echo "No se encontraron eventos."
+            echo "has_events=false" >> $GITHUB_OUTPUT
+          else
+            echo "Eventos encontrados:"
+            echo "$urls"
+            echo "events=$urls" >> $GITHUB_OUTPUT
+            echo "has_events=true" >> $GITHUB_OUTPUT
+            echo "URLs obtenidas del API:"
+            echo "$urls" | jq -r '.[]'
+          fi
 
   generate-pdfs:
     needs: call-api
+    if: needs.call-api.outputs.has-events == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
