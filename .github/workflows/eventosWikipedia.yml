@@ -77,7 +77,7 @@ jobs:
         run: |
           title=$(basename "${{ matrix.event }}")
           safe_title=$(echo "$title" | sed 's|https://es.wikipedia.org/wiki/||')
-          echo "filename=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-$safe_title.pdf" >> $GITHUB_ENV
+          echo "filename=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-$safe_title" >> $GITHUB_ENV
 
       - name: Convertir HTML a PDF
         id: convert-html-to-pdf
