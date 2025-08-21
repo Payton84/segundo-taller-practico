@@ -75,7 +75,7 @@ jobs:
       - name: Preparar nombre de artefacto
         id: name-artefact
         run: |
-          title=$(basename "${{ matrix.url }}")
+          title=$(basename "${{ matrix.urls }}")
           safe_title=$(echo "$title" | sed 's/[^a-zA-Z0-9_-]/_/g')
           echo "filename=${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-$safe_title.pdf" >> $GITHUB_ENV
 
