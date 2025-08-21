@@ -1,14 +1,14 @@
-name: On This Day Pipeline
+name: Wikipedia Pipeline
 
 on:
   workflow_dispatch:
     inputs:
       month:
-        description: 'Mes en formato MM (ejemplo: 08)'
+        description: 'Mes (formato MM)'
         required: true
         default: '01'
       day:
-        description: 'Día en formato DD (ejemplo: 20)'
+        description: 'Día (formato DD)'
         required: true
         default: '01'
 
@@ -22,6 +22,6 @@ jobs:
       - name: Llamar API On This Day
         run: |
           echo "Ejecutando consulta al API..."
-          RESPONSE=$(curl -s "https://byabbe.se/on-this-day/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}/events.json?lang=${{ vars.LANGUAGE }}")
+          RESPONSE=$(curl --location --request GET "https://api.wikimedia.org/feed/v1/wikipedia/lang=${{ vars.LANG }}/onthisday/all/${{ github.event.inputs.month }}/${{ github.event.inputs.day }}")
           echo "Respuesta del API:"
           echo "$RESPONSE" | jq .
