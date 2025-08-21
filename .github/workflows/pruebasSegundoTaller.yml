@@ -62,12 +62,12 @@ jobs:
           echo "title=$TITLE" >> $GITHUB_OUTPUT
           echo "url=$URL" >> $GITHUB_OUTPUT
 
-      - name: Convert HTML to PDF
-        id: convert-pdf
-        uses: narthanaj/html-to-pdf-action@v1
+      - name: html to pdf
+        uses: fifsky/html-to-pdf-action@master
         with:
-          source: ${{ steps.info.outputs.url }}
-          output: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ steps.info.outputs.title }}.pdf
+          htmlFile: ${{ steps.info.outputs.url }}
+          outputFile: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ steps.info.outputs.title }}.pdf
+          pdfOptions: '{"format": "A4", "margin": {"top": "10mm", "left": "10mm", "right": "10mm", "bottom": "10mm"}  }}'
 
       - name: Upload PDF Artifact
         id: upload-artifact
