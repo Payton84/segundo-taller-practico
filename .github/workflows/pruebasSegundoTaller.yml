@@ -15,6 +15,8 @@ on:
 jobs:
   call-api:
     runs-on: ubuntu-latest
+    outputs:
+      events: ${{ steps.get-events.outputs.events }}
     steps:
       - name: Cache JSON file
         id: cache-json
@@ -24,7 +26,7 @@ jobs:
           key: ${{ runner.os }}-json-${{ hashFiles('response.json') }}
           restore-keys: |
             ${{ runner.os }}-json-
-            
+
       - name: Llamar API OnThisDay
         if: steps.cache-json.outputs.cache-hit != 'true'
         id: call_api
@@ -40,7 +42,35 @@ jobs:
           else
             echo "No se utilizó caché en esta ejecución."
           fi
+          # Export JSON to output
+          EVENTS=$(jq -c '.selected' "response.json")
+          echo "events=$EVENTS" >> $GITHUB_OUTPUT
 
+generate-pdfs:
+    needs: call-api
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        event: ${{ fromJson(needs.call-api.outputs.events) }}
+    steps:
+      - name: Get Title and URL
+        id: info
+        run: |
+          TITLE=$(echo '${{ matrix.event }}' | jq -r '.pages[0].title' | tr ' ' '_')
+          URL=$(echo '${{ matrix.event }}' | jq -r '.pages[0].content_urls.desktop.page')
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "url=$URL" >> $GITHUB_OUTPUT
 
+      - name: Convert HTML to PDF
+        uses: narthanaj/html-to-pdf-action@v1
+        with:
+          source: ${{ steps.info.outputs.url }}
+          output: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ steps.info.outputs.title }}.pdf
+
+      - name: Upload PDF Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ steps.info.outputs.title }}
+          path: ${{ github.event.inputs.month }}-${{ github.event.inputs.day }}-${{ steps.info.outputs.title }}.pdf
       
       
